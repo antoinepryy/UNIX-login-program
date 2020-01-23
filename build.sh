@@ -1,0 +1,1 @@
+gcc -std=gnu99 -Wall -g -o mylogin login_linux.c -lcrypt
