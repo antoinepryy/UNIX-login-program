@@ -26,7 +26,6 @@ void sighandler() {
 int main(int argc, char *argv[]) {
 
 	mypwent *passwddata;
-	/* see pwent.h */
 
 	char important1[LENGTH] = "**IMPORTANT 1**";
 
@@ -61,22 +60,19 @@ int main(int argc, char *argv[]) {
 		 		LENGTH - 1, LENGTH - 1, important2);
 		user_pass = getpass(prompt);
 		passwddata = mygetpwnam(user);
-		//printf("%s\n", crypt(user_pass, (const char *) '$6'));
-        //execve("/", 0, 0);
 
         if (passwddata != NULL) {
-			/* You have to encrypt user_pass for this to work */
-			/* Don't forget to include the salt */
-			c_pass = crypt(user_pass, passwddata->passwd);
+			/* password encryption using salt */
+			c_pass = crypt(user_pass, passwddata->passwd_salt);
 			printf("%s", c_pass);
 
 			if (!strcmp(c_pass, passwddata->passwd)) {
 
 				printf(" You're in !\n");
 
-				/*  check UID, see setuid(2) */
+				/*  UID checking */
 				setuid(getuid());
-				/*  start a shell, use execve(2) */
+				/*  start a shell with no arguments */
                 execve("/bin/sh", 0, 0);
 
 
