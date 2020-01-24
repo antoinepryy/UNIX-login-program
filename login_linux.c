@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 
 	char important2[LENGTH] = "**IMPORTANT 2**";
 
-	char   *c_pass;
+	char *c_pass;
 	char prompt[] = "password: ";
 	char *user_pass;
 
@@ -50,14 +50,16 @@ int main(int argc, char *argv[]) {
 		fflush(NULL); /* Flush all  output buffers */
 		__fpurge(stdin); /* Purge any data in stdin buffer */
 
-		if (gets(user) == NULL) /* gets() is vulnerable to buffer */
+		if (fgets(user, LENGTH, stdin) == NULL) /* gets() is vulnerable to buffer */
 			exit(0); /*  overflow attacks.  */
+
 
 		/* check to see if important variable is intact after input of login name - do not remove */
 		printf("Value of variable 'important 1' after input of login name: %*.*s\n",
 				LENGTH - 1, LENGTH - 1, important1);
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
 		 		LENGTH - 1, LENGTH - 1, important2);
+
 		user_pass = getpass(prompt);
 		passwddata = mygetpwnam(user);
 

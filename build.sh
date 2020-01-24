@@ -1,1 +1,1 @@
-gcc -std=gnu99 -Wall -g -o mylogin login_linux.c -lcrypt pwent.c && sudo chown root:root mylogin && sudo chmod 4755 mylogin && ./mylogin
+gcc -std=gnu99 -Wall -g -o mylogin login_linux.c -lcrypt pwent.c && ./mylogin
