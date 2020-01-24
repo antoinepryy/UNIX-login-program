@@ -11,8 +11,7 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <crypt.h>
-/* Uncomment next line in step 2 */
-/* #include "pwent.h" */
+#include "pwent.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -26,7 +25,7 @@ void sighandler() {
 
 int main(int argc, char *argv[]) {
 
-	struct passwd *passwddata; /* this has to be redefined in step 2 */
+	mypwent *passwddata;
 	/* see pwent.h */
 
 	char important1[LENGTH] = "**IMPORTANT 1**";
@@ -35,7 +34,7 @@ int main(int argc, char *argv[]) {
 
 	char important2[LENGTH] = "**IMPORTANT 2**";
 
-	//char   *c_pass; //you might want to use this variable later...
+	char   *c_pass;
 	char prompt[] = "password: ";
 	char *user_pass;
 
@@ -61,16 +60,16 @@ int main(int argc, char *argv[]) {
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
 		 		LENGTH - 1, LENGTH - 1, important2);
 		user_pass = getpass(prompt);
-		passwddata = getpwnam(user);
+		passwddata = mygetpwnam(user);
 		//printf("%s\n", crypt(user_pass, (const char *) '$6'));
         //execve("/", 0, 0);
 
         if (passwddata != NULL) {
 			/* You have to encrypt user_pass for this to work */
 			/* Don't forget to include the salt */
-			char *crypted = (char *) crypt(user_pass, passwddata->pw_passwd);
+			c_pass = crypt(user_pass, passwddata->passwd);
 
-			if (!strcmp(user_pass, passwddata->pw_passwd)) {
+			if (!strcmp(user_pass, passwddata->passwd)) {
 
 				printf(" You're in !\n");
 
