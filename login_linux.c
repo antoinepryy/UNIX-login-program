@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
 	char prompt[] = "password: ";
 	char *user_pass;
 
+
 	sighandler();
 
 	while (TRUE) {
@@ -52,9 +53,11 @@ int main(int argc, char *argv[]) {
 
 		if (fgets(user, LENGTH, stdin) == NULL) /* gets() is vulnerable to buffer */
 			exit(0); /*  overflow attacks.  */
+        user[strlen(user) - 1] = '\0';
 
 
-		/* check to see if important variable is intact after input of login name - do not remove */
+
+        /* check to see if important variable is intact after input of login name - do not remove */
 		printf("Value of variable 'important 1' after input of login name: %*.*s\n",
 				LENGTH - 1, LENGTH - 1, important1);
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
@@ -66,11 +69,13 @@ int main(int argc, char *argv[]) {
         if (passwddata != NULL) {
 			/* password encryption using salt */
 			c_pass = crypt(user_pass, passwddata->passwd_salt);
-			printf("%s", c_pass);
 
 			if (!strcmp(c_pass, passwddata->passwd)) {
 
-				printf(" You're in !\n");
+                printf("Number of failed attempts = %d\n", passwddata->pwfailed);
+                printf(" You're in !\n");
+                passwddata->pwfailed = 0;
+                mysetpwent(user, passwddata);
 
 				/*  UID checking */
 				setuid(getuid());
@@ -78,6 +83,9 @@ int main(int argc, char *argv[]) {
                 execve("/bin/sh", 0, 0);
 
 
+            } else {
+                passwddata->pwfailed++;
+                mysetpwent(user, passwddata);
             }
 		}
 		printf("Login Incorrect \n");
