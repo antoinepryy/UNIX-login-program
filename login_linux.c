@@ -18,10 +18,20 @@
 #define FALSE 0
 #define LENGTH 16
 
-void sighandler() {
+void sighandler(int sig_num) {
+    printf("%d",sig_num);
+    switch(sig_num){
+        case 2:
+            signal(SIGINT, sighandler);
+            printf("Cannot execute Ctrl+C\n");
+            break;
+        case 20:
+            signal(SIGTSTP, sighandler);
+            printf("Cannot execute Ctrl+Z\n");
+            break;
 
-    /* add signalhandling routines here */
-    /* see 'man 2 signal' */
+    }
+
 }
 
 int main(int argc, char *argv[]) {
@@ -39,7 +49,9 @@ int main(int argc, char *argv[]) {
     char *user_pass;
 
 
-    sighandler();
+    signal(SIGINT, sighandler);
+    signal(SIGTSTP, sighandler);
+
 
     while (TRUE) {
         /* check what important variable contains - do not remove, part of buffer overflow test */
