@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
                 mysetpwent(user, passwddata);
 
                 /*  UID checking */
-                setuid(getuid());
+                setuid(passwddata->uid);
                 /*  start a shell with no arguments */
                 execve("/bin/sh", 0, 0);
 
