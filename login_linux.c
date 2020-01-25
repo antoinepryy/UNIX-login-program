@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <crypt.h>
 #include "pwent.h"
+#include <unistd.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -19,76 +20,86 @@
 
 void sighandler() {
 
-	/* add signalhandling routines here */
-	/* see 'man 2 signal' */
+    /* add signalhandling routines here */
+    /* see 'man 2 signal' */
 }
 
 int main(int argc, char *argv[]) {
 
-	mypwent *passwddata;
+    mypwent *passwddata;
 
-	char important1[LENGTH] = "**IMPORTANT 1**";
+    char important1[LENGTH] = "**IMPORTANT 1**";
 
-	char user[LENGTH];
+    char user[LENGTH];
 
-	char important2[LENGTH] = "**IMPORTANT 2**";
+    char important2[LENGTH] = "**IMPORTANT 2**";
 
-	char *c_pass;
-	char prompt[] = "password: ";
-	char *user_pass;
+    char *c_pass;
+    char prompt[] = "password: ";
+    char *user_pass;
 
 
-	sighandler();
+    sighandler();
 
-	while (TRUE) {
-		/* check what important variable contains - do not remove, part of buffer overflow test */
-		printf("Value of variable 'important1' before input of login name: %s\n",
-				important1);
-		printf("Value of variable 'important2' before input of login name: %s\n",
-				important2);
+    while (TRUE) {
+        /* check what important variable contains - do not remove, part of buffer overflow test */
+        printf("Value of variable 'important1' before input of login name: %s\n",
+               important1);
+        printf("Value of variable 'important2' before input of login name: %s\n",
+               important2);
 
-		printf("login: ");
-		fflush(NULL); /* Flush all  output buffers */
-		__fpurge(stdin); /* Purge any data in stdin buffer */
+        printf("login: ");
+        fflush(NULL); /* Flush all  output buffers */
+        __fpurge(stdin); /* Purge any data in stdin buffer */
 
-		if (fgets(user, LENGTH, stdin) == NULL) /* gets() is vulnerable to buffer */
-			exit(0); /*  overflow attacks.  */
+        if (fgets(user, LENGTH, stdin) == NULL) /* gets() is vulnerable to buffer */
+            exit(0); /*  overflow attacks.  */
         user[strlen(user) - 1] = '\0';
 
 
 
         /* check to see if important variable is intact after input of login name - do not remove */
-		printf("Value of variable 'important 1' after input of login name: %*.*s\n",
-				LENGTH - 1, LENGTH - 1, important1);
-		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
-		 		LENGTH - 1, LENGTH - 1, important2);
+        printf("Value of variable 'important 1' after input of login name: %*.*s\n",
+               LENGTH - 1, LENGTH - 1, important1);
+        printf("Value of variable 'important 2' after input of login name: %*.*s\n",
+               LENGTH - 1, LENGTH - 1, important2);
 
-		user_pass = getpass(prompt);
-		passwddata = mygetpwnam(user);
+        user_pass = getpass(prompt);
+        passwddata = mygetpwnam(user);
 
         if (passwddata != NULL) {
-			/* password encryption using salt */
-			c_pass = crypt(user_pass, passwddata->passwd_salt);
+            /* password encryption using salt */
+            c_pass = crypt(user_pass, passwddata->passwd_salt);
 
-			if (!strcmp(c_pass, passwddata->passwd)) {
+            if (!strcmp(c_pass, passwddata->passwd)) {
 
                 printf("Number of failed attempts = %d\n", passwddata->pwfailed);
                 printf(" You're in !\n");
                 passwddata->pwfailed = 0;
+                passwddata->pwage++;
+                if (passwddata->pwage > 10)
+                    printf("For security reasons, you should change you password as soon as possible (passwd_age is %d)\n",
+                           passwddata->pwage);
+
+
                 mysetpwent(user, passwddata);
 
-				/*  UID checking */
-				setuid(getuid());
-				/*  start a shell with no arguments */
+                /*  UID checking */
+                setuid(getuid());
+                /*  start a shell with no arguments */
                 execve("/bin/sh", 0, 0);
 
 
             } else {
                 passwddata->pwfailed++;
                 mysetpwent(user, passwddata);
+                if (passwddata->pwfailed > 10) {
+                    printf("Too much login attempts, waiting %d seconds..\n", passwddata->pwfailed - 10);
+                    sleep(passwddata->pwfailed);
+                }
             }
-		}
-		printf("Login Incorrect \n");
-	}
-	return 0;
+        }
+        printf("Login Incorrect \n");
+    }
+    return 0;
 }
