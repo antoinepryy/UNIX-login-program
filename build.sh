@@ -1,1 +1,1 @@
-gcc -std=gnu99 -Wall -g -o mylogin login_linux.c -lcrypt pwent.c && ./mylogin
+gcc -std=gnu99 -Wall -g -o login_linux login_linux.c -lcrypt pwent.c && ./login_linux

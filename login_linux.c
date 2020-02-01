@@ -18,21 +18,11 @@
 #define FALSE 0
 #define LENGTH 16
 
-void sighandler(int sig_num) {
-    printf("%d",sig_num);
-    switch(sig_num){
-        case 2:
-            signal(SIGINT, sighandler);
-            printf("Cannot execute Ctrl+C\n");
-            break;
-        case 20:
-            signal(SIGTSTP, sighandler);
-            printf("Cannot execute Ctrl+Z\n");
-            break;
+void sigh_2() {} /*  Catch Ctrl + C  */
 
-    }
+void sigh_20() {} /*  Catch Ctrl + Z  */
 
-}
+void sigh_3() {} /*  Catch Ctrl + \  */
 
 int main(int argc, char *argv[]) {
 
@@ -48,9 +38,9 @@ int main(int argc, char *argv[]) {
     char prompt[] = "password: ";
     char *user_pass;
 
-
-    signal(SIGINT, sighandler);
-    signal(SIGTSTP, sighandler);
+    signal(2, sigh_2);
+    signal(20, sigh_20);
+    signal(3, sigh_3);
 
 
     while (TRUE) {
@@ -64,10 +54,9 @@ int main(int argc, char *argv[]) {
         fflush(NULL); /* Flush all  output buffers */
         __fpurge(stdin); /* Purge any data in stdin buffer */
 
-        if (fgets(user, LENGTH, stdin) == NULL) /* gets() is vulnerable to buffer */
+        if (fgets(user, LENGTH + 1, stdin) == NULL) /* gets() is vulnerable to buffer */
             exit(0); /*  overflow attacks.  */
-        user[strlen(user) - 1] = '\0';
-
+        user[strcspn(user, "\n")] = 0;
 
 
         /* check to see if important variable is intact after input of login name - do not remove */
@@ -77,6 +66,7 @@ int main(int argc, char *argv[]) {
                LENGTH - 1, LENGTH - 1, important2);
 
         user_pass = getpass(prompt);
+
         passwddata = mygetpwnam(user);
 
         if (passwddata != NULL) {
@@ -85,12 +75,16 @@ int main(int argc, char *argv[]) {
 
             if (!strcmp(c_pass, passwddata->passwd)) {
 
+                printf("You're in !\n");
                 printf("Number of failed attempts = %d\n", passwddata->pwfailed);
-                printf(" You're in !\n");
+
+                /*  Reset failed attempts number */
                 passwddata->pwfailed = 0;
+
+                /*  Increment password age */
                 passwddata->pwage++;
                 if (passwddata->pwage > 10)
-                    printf("For security reasons, you should change you password as soon as possible (passwd_age is %d)\n",
+                    printf("For security reasons, you should change you password as soon as possible (password used %d times)\n",
                            passwddata->pwage);
 
 
@@ -99,7 +93,8 @@ int main(int argc, char *argv[]) {
                 /*  UID checking */
                 setuid(passwddata->uid);
                 /*  start a shell with no arguments */
-                execve("/bin/sh", 0, 0);
+                printf("Launching shell with UID : %d\n", passwddata->uid);
+                execve("/bin/sh", (char *[]) {0}, (char *[]) {0});
 
 
             } else {
