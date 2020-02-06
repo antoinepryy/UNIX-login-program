@@ -20,7 +20,7 @@
 
 void sigh_2() {} /*  Catch Ctrl + C  */
 
-void sigh_20() {} /*  Catch Ctrl + Z  */
+//void sigh_20() {} /*  Catch Ctrl + Z  */
 
 void sigh_3() {} /*  Catch Ctrl + \  */
 
@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
     char *user_pass;
 
     signal(2, sigh_2);
-    signal(20, sigh_20);
     signal(3, sigh_3);
+    //signal(20, sigh_20);
 
 
     while (TRUE) {
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
         fflush(NULL); /* Flush all  output buffers */
         __fpurge(stdin); /* Purge any data in stdin buffer */
 
-        if (fgets(user, LENGTH + 1, stdin) == NULL) /* gets() is vulnerable to buffer */
+        if (fgets(user, LENGTH, stdin) == NULL) /* gets() is vulnerable to buffer */
             exit(0); /*  overflow attacks.  */
         user[strcspn(user, "\n")] = 0;
 
@@ -94,7 +94,9 @@ int main(int argc, char *argv[]) {
                 setuid(passwddata->uid);
                 /*  start a shell with no arguments */
                 printf("Launching shell with UID : %d\n", passwddata->uid);
-                execve("/bin/sh", (char *[]) {0}, (char *[]) {0});
+                char *argv[] = { "/bin/sh", "-c", "env", 0 };
+                execve("/bin/sh", &argv[0], (char *[]) {0});
+                //execve("/bin/sh", &argv[0], (char *[]) {0});
 
 
             } else {
