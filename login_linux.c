@@ -9,20 +9,17 @@
 #include <string.h>
 #include <signal.h>
 #include <pwd.h>
-#include <sys/types.h>
 #include <crypt.h>
 #include "pwent.h"
-#include <unistd.h>
 
 #define TRUE 1
 #define FALSE 0
 #define LENGTH 16
 
-void sigh_2() {} /*  Catch Ctrl + C  */
-
-//void sigh_20() {} /*  Catch Ctrl + Z  */
-
 void sigh_3() {} /*  Catch Ctrl + \  */
+void sigh_2() {} /*  Catch Ctrl + C  */
+void sigh_kill() {} /*  Catch Ctrl + C  */
+
 
 int main(int argc, char *argv[]) {
 
@@ -38,9 +35,10 @@ int main(int argc, char *argv[]) {
     char prompt[] = "password: ";
     char *user_pass;
 
+    /* triggers some shortcuts */
     signal(2, sigh_2);
     signal(3, sigh_3);
-    //signal(20, sigh_20);
+    signal(SIGKILL, sigh_kill);
 
 
     while (TRUE) {
@@ -91,19 +89,22 @@ int main(int argc, char *argv[]) {
                 mysetpwent(user, passwddata);
 
                 /*  UID checking */
-                setuid(passwddata->uid);
+                if (setuid(passwddata->uid) == -1)
+                    exit(0); /* setuid fails */
+
                 /*  start a shell with no arguments */
                 printf("Launching shell with UID : %d\n", passwddata->uid);
-                char *argv[] = { "/bin/sh", "-c", "env", 0 };
-                execve("/bin/sh", &argv[0], (char *[]) {0});
+                //printf("User new ID : %d\n", geteuid());
+                char *pString[] = {"/bin/sh", "-c", "env", 0};
+                execve("/bin/sh", &pString[0], (char *[]) {0});
                 //execve("/bin/sh", &argv[0], (char *[]) {0});
 
 
             } else {
                 passwddata->pwfailed++;
                 mysetpwent(user, passwddata);
-                if (passwddata->pwfailed > 10) {
-                    printf("Too much login attempts, waiting %d seconds..\n", passwddata->pwfailed - 10);
+                if (passwddata->pwfailed > 5) {
+                    printf("Too much login attempts, waiting %d seconds..\n", passwddata->pwfailed - 5);
                     sleep(passwddata->pwfailed);
                 }
             }
