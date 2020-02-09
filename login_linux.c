@@ -89,9 +89,9 @@ int main(int argc, char *argv[]) {
                 mysetpwent(user, passwddata);
 
                 /*  UID checking */
-                if (setuid(passwddata->uid) == -1)
+                if (setuid(passwddata->uid) == -1) {
                     exit(0); /* setuid fails */
-
+                }
                 /*  start a shell with no arguments */
                 printf("Launching shell with UID : %d\n", passwddata->uid);
                 //printf("User new ID : %d\n", geteuid());
